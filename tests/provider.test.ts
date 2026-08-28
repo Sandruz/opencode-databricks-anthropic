@@ -112,6 +112,19 @@ describe("applyProvider", () => {
     expect(inherited["custom-provider"]).toEqual({ name: "Inherited" })
   })
 
+  it.each(["__proto__", "constructor", "prototype"])(
+    "creates an own provider entry for special ID %s",
+    (providerId) => {
+      const config: Config = {}
+
+      applyProvider(config, { ...options, providerId }, settings)
+
+      expect(Object.hasOwn(config.provider ?? {}, providerId)).toBe(true)
+      expect(Object.getPrototypeOf(config.provider)).toBe(Object.prototype)
+      expect(config.model).toBe(`${providerId}/model-large`)
+    },
+  )
+
   it("does not mutate an inherited provider object", () => {
     const inheritedProvider = { existing: { name: "Inherited" } }
     const config = Object.create({ provider: inheritedProvider }) as Config

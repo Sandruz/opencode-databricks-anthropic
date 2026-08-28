@@ -35,16 +35,21 @@ export function applyProvider(
     },
   ]))
 
-  configuredProviders[options.providerId] = {
-    npm: "@ai-sdk/anthropic",
-    name: "Databricks Anthropic",
-    options: {
-      authToken: settings.authToken,
-      baseURL: normalizeBaseUrl(settings.baseUrl),
-      setCacheKey: true,
+  Object.defineProperty(configuredProviders, options.providerId, {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    value: {
+      npm: "@ai-sdk/anthropic",
+      name: "Databricks Anthropic",
+      options: {
+        authToken: settings.authToken,
+        baseURL: normalizeBaseUrl(settings.baseUrl),
+        setCacheKey: true,
+      },
+      models,
     },
-    models,
-  }
+  })
 
   Object.defineProperties(config, {
     provider: { configurable: true, enumerable: true, writable: true, value: configuredProviders },
