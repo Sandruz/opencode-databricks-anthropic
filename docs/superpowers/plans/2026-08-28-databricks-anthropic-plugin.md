@@ -1146,29 +1146,89 @@ Run: `node scripts/live-validate.mjs`
 
 Expected: prints settings path only and exits `0`; token and base URL remain undisclosed.
 
-- [ ] **Step 5: Validate plugin against OpenCode without changing global config**
+- [ ] **Step 5: Validate the packed plugin in fully isolated OpenCode roots**
 
-Create a temporary OpenCode config directory, install packed package there, and load built plugin through a temporary local shim:
-
-```bash
-tmpdir="$(mktemp -d)"
-mkdir -p "$tmpdir/plugins"
-npm install --prefix "$tmpdir" ./opencode-databricks-anthropic-0.1.0.tgz
-printf '%s\n' 'export { DatabricksAnthropicPlugin } from "opencode-databricks-anthropic"' > "$tmpdir/plugins/databricks-anthropic.js"
-OPENCODE_CONFIG_DIR="$tmpdir" opencode models databricks-anthropic
-```
-
-Expected: exactly three default model IDs appear under `databricks-anthropic`; no credential value appears.
-
-- [ ] **Step 6: Run minimal Haiku inference in temporary config**
-
-Run:
+Run this complete block from the repository root. It copies the current Claude settings bytes to a private temporary file, installs only the packed tarball, captures all OpenCode output, checks it internally for the configured token and base URL, and removes the temporary tree on exit. It never prints settings or captured command output.
 
 ```bash
-OPENCODE_CONFIG_DIR="$tmpdir" opencode run --model databricks-anthropic/system.ai.claude-haiku-4-5 "Reply with exactly: gateway-ok"
+set -euo pipefail
+
+repo="$PWD"
+artifact="$repo/opencode-databricks-anthropic-0.1.0.tgz"
+opencode_bin="$(command -v opencode)"
+original_home="$HOME"
+if [[ -n "${CLAUDE_CONFIG_DIR:-}" ]]; then
+  case "$CLAUDE_CONFIG_DIR" in
+    /*) settings_source="$CLAUDE_CONFIG_DIR/settings.json" ;;
+    *) settings_source="$repo/$CLAUDE_CONFIG_DIR/settings.json" ;;
+  esac
+else
+  settings_source="$original_home/.claude/settings.json"
+fi
+
+root="$(mktemp -d)"
+trap 'rm -rf "$root"' EXIT
+install -d -m 700 \
+  "$root/home" "$root/cwd" "$root/claude" "$root/opencode/plugins" \
+  "$root/xdg-config" "$root/xdg-data" "$root/xdg-cache" "$root/xdg-state"
+install -m 600 -- "$settings_source" "$root/claude/settings.json"
+npm install --prefix "$root/opencode" "$artifact" >"$root/install.out" 2>&1
+printf '%s\n' \
+  'export { DatabricksAnthropicPlugin } from "opencode-databricks-anthropic"' \
+  >"$root/opencode/plugins/databricks-anthropic.js"
+
+run_isolated() {
+  env -u OPENCODE_CONFIG -u OPENCODE_CONFIG_CONTENT \
+    HOME="$root/home" \
+    XDG_CONFIG_HOME="$root/xdg-config" \
+    XDG_DATA_HOME="$root/xdg-data" \
+    XDG_CACHE_HOME="$root/xdg-cache" \
+    XDG_STATE_HOME="$root/xdg-state" \
+    OPENCODE_CONFIG_DIR="$root/opencode" \
+    CLAUDE_CONFIG_DIR="$root/claude" \
+    "$opencode_bin" "$@"
+}
+
+(
+  cd "$root/cwd"
+  run_isolated models databricks-anthropic >"$root/models.out" 2>&1
+  run_isolated run \
+    --model databricks-anthropic/system.ai.claude-haiku-4-5 \
+    "Reply with exactly: gateway-ok" >"$root/inference.out" 2>&1
+)
+
+ROOT="$root" node --input-type=module <<'NODE'
+import { readFile } from "node:fs/promises"
+import { join } from "node:path"
+
+const root = process.env.ROOT
+const settings = JSON.parse(await readFile(join(root, "claude/settings.json"), "utf8"))
+const models = await readFile(join(root, "models.out"), "utf8")
+const inference = await readFile(join(root, "inference.out"), "utf8")
+for (const key of ["ANTHROPIC_BASE_URL", "ANTHROPIC_AUTH_TOKEN"]) {
+  const value = Object.hasOwn(settings.env, key) ? settings.env[key] : undefined
+  if (typeof value !== "string" || value.trim() === "") throw new Error(`${key} is missing or empty`)
+  if (models.includes(value) || inference.includes(value)) throw new Error(`${key} leaked into captured output`)
+}
+const expected = [
+  "databricks-anthropic/system.ai.claude-opus-5",
+  "databricks-anthropic/system.ai.claude-sonnet-5",
+  "databricks-anthropic/system.ai.claude-haiku-4-5",
+]
+const discovered = models.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
+if (discovered.length !== expected.length || expected.some((id) => !discovered.includes(id))) {
+  throw new Error("model discovery did not return exactly the three expected models")
+}
+if (!/(^|\s)gateway-ok(\s|$)/.test(inference)) throw new Error("Haiku response did not contain gateway-ok")
+console.log("isolated packed-plugin live validation passed")
+NODE
 ```
 
-Expected: response contains `gateway-ok`; command exits `0`; no credential value appears.
+Expected: prints only `isolated packed-plugin live validation passed`; temporary cwd, home, XDG roots, OpenCode config, Claude settings copy, installation, and captures are deleted by the exit trap.
+
+- [ ] **Step 6: Confirm isolation and live assertions**
+
+Expected: the command runs outside the repository with temporary `HOME`, all four XDG roots, `OPENCODE_CONFIG_DIR`, and `CLAUDE_CONFIG_DIR`; model discovery returns exactly the three expected IDs; Haiku returns `gateway-ok`; neither configured secret appears in captured stdout or stderr.
 
 - [ ] **Step 7: Commit validation script**
 

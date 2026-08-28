@@ -91,7 +91,7 @@ The plugin never writes credentials to OpenCode auth storage and does not log cr
 
 ## Migration From Inline Provider
 
-Validate the plugin before changing working global configuration. Add the package to the OpenCode plugin list and test model discovery plus a Haiku request. Only after validation succeeds, remove the inline provider, plugin-owned `model` and `small_model` values, and any custom launcher. Keep rollback copies until direct `opencode` launch passes.
+Validate the packed plugin before changing working global configuration. Run model discovery and a Haiku request from a temporary cwd with temporary `HOME`, XDG, and OpenCode config roots; install only the tarball through a local shim, use a private temporary Claude settings copy, and scan captured output for credential values. Only after all three expected models and `gateway-ok` pass should you remove the inline provider, plugin-owned `model` and `small_model` values, or any custom launcher. Keep rollback copies until direct `opencode` launch passes.
 
 ## Development
 
