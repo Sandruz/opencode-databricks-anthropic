@@ -67,7 +67,7 @@ function normalizeModel(id: string, value: unknown): NormalizedModel {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     fail(`${path} must be an object`)
   }
-  const model = value as ModelOptions
+  const model = Object.fromEntries(Object.entries(value)) as ModelOptions
   return {
     name: model.name === undefined ? id : nonempty(model.name, `${path}.name`),
     context: positiveInteger(model.context, DEFAULT_CONTEXT, `${path}.context`),

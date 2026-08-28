@@ -69,6 +69,28 @@ describe("parseOptions", () => {
     })
   })
 
+  it("ignores inherited model properties", () => {
+    const model = Object.create({
+      name: "Inherited",
+      context: 1,
+      output: 2,
+      reasoning: false,
+      toolCall: false,
+    })
+
+    expect(parseOptions({
+      models: { x: model },
+      defaultModel: "x",
+      smallModel: "x",
+    }).models.x).toEqual({
+      name: "x",
+      context: 200000,
+      output: 64000,
+      reasoning: true,
+      toolCall: true,
+    })
+  })
+
   it("rejects an inherited default model reference", () => {
     expect(() => parseOptions({
       models: { x: {} },
