@@ -1,6 +1,7 @@
 {
   "name": "opencode-databricks-anthropic",
   "version": "0.1.0",
+  "description": "OpenCode plugin for Anthropic models behind Databricks AI Gateway",
   "type": "module",
   "license": "MIT",
   "engines": {
