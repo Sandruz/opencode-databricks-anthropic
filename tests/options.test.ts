@@ -23,6 +23,26 @@ describe("parseOptions", () => {
     })
   })
 
+  it("returns isolated default models", () => {
+    const first = parseOptions(undefined)
+    first.models["system.ai.claude-opus-5"].name = "Mutated"
+
+    const second = parseOptions(undefined)
+    expect(second.models["system.ai.claude-opus-5"].name).toBe("Claude Opus 5 (Databricks)")
+  })
+
+  it("ignores inherited top-level options", () => {
+    const input = Object.create({
+      settingsPath: "/inherited/settings.json",
+      providerId: "inherited",
+      defaultModel: "inherited",
+      smallModel: "inherited",
+      models: { inherited: {} },
+    })
+
+    expect(parseOptions(input)).toEqual(parseOptions(undefined))
+  })
+
   it("replaces default models with a custom model map", () => {
     const options = parseOptions({
       defaultModel: "custom-claude",
@@ -67,6 +87,8 @@ describe("parseOptions", () => {
 
   it.each([
     [{ models: {} }, "models must be a nonempty object"],
+    [{ models: { "": {}, x: {} }, defaultModel: "x", smallModel: "x" }, "model ID must be a nonempty string"],
+    [{ models: { "  ": {}, x: {} }, defaultModel: "x", smallModel: "x" }, "model ID must be a nonempty string"],
     [{ models: [] }, "models must be a nonempty object"],
     [{ models: "invalid" }, "models must be a nonempty object"],
     [{ providerId: "" }, "providerId must be a nonempty string"],

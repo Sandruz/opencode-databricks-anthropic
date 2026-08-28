@@ -81,7 +81,7 @@ export function parseOptions(input: unknown): NormalizedOptions {
   if (input !== undefined && (typeof input !== "object" || input === null || Array.isArray(input))) {
     fail("options must be an object")
   }
-  const options = (input ?? {}) as PluginOptions
+  const options = Object.fromEntries(Object.entries(input ?? {})) as PluginOptions
   const providerId = options.providerId === undefined
     ? DEFAULT_PROVIDER_ID
     : nonempty(options.providerId, "providerId")
@@ -92,14 +92,17 @@ export function parseOptions(input: unknown): NormalizedOptions {
     ? DEFAULT_SMALL_MODEL
     : nonempty(options.smallModel, "smallModel")
 
-  let models = DEFAULT_MODELS
+  let models = structuredClone(DEFAULT_MODELS)
   if (options.models !== undefined) {
     if (typeof options.models !== "object" || options.models === null || Array.isArray(options.models)) {
       fail("models must be a nonempty object")
     }
     const entries = Object.entries(options.models)
     if (entries.length === 0) fail("models must be a nonempty object")
-    models = Object.fromEntries(entries.map(([id, model]) => [id, normalizeModel(id, model)]))
+    models = Object.fromEntries(entries.map(([id, model]) => {
+      nonempty(id, "model ID")
+      return [id, normalizeModel(id, model)]
+    }))
   }
 
   if (!Object.hasOwn(models, defaultModel)) fail("defaultModel must reference a configured model")
