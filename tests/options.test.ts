@@ -107,6 +107,26 @@ describe("parseOptions", () => {
     })).toThrow("smallModel must reference a configured model")
   })
 
+  it.each(["__proto__", "constructor", "prototype"])(
+    "rejects reserved provider ID %s",
+    (providerId) => {
+      expect(() => parseOptions({ providerId })).toThrow(
+        `providerId must not be reserved: ${providerId}`,
+      )
+    },
+  )
+
+  it.each(["__proto__", "constructor", "prototype"])(
+    "rejects reserved model ID %s",
+    (modelId) => {
+      expect(() => parseOptions({
+        models: { [modelId]: {} },
+        defaultModel: modelId,
+        smallModel: modelId,
+      })).toThrow(`model ID must not be reserved: ${modelId}`)
+    },
+  )
+
   it.each([
     [{ models: {} }, "models must be a nonempty object"],
     [{ models: { "": {}, x: {} }, defaultModel: "x", smallModel: "x" }, "model ID must be a nonempty string"],

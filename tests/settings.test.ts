@@ -152,12 +152,20 @@ describe("normalizeBaseUrl", () => {
     ["https://example.com/gateway/", "https://example.com/gateway/v1"],
     ["https://example.com/gateway/v1", "https://example.com/gateway/v1"],
     ["https://example.com/gateway/v1/", "https://example.com/gateway/v1"],
+    ["https://example.com/gateway/v1/v1", "https://example.com/gateway/v1"],
+    ["https://example.com/gateway/v1/v1/", "https://example.com/gateway/v1"],
+    ["https://example.com/gateway/v1/v1/v1///", "https://example.com/gateway/v1"],
   ])("normalizes %s", (input, expected) => {
     expect(normalizeBaseUrl(input)).toBe(expected)
   })
 
   it("preserves path segments ending in v1-like text", () => {
     expect(normalizeBaseUrl("https://example.com/gateway/v11")).toBe("https://example.com/gateway/v11/v1")
+  })
+
+  it("preserves path case and internal duplicate slashes", () => {
+    expect(normalizeBaseUrl("https://example.com/gateway//V1/"))
+      .toBe("https://example.com/gateway//V1/v1")
   })
 
   it("rejects a query component", () => {

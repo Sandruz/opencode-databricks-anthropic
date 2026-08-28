@@ -4,7 +4,7 @@ OpenCode plugin for Anthropic Messages API models served through Databricks AI G
 
 ## Requirements
 
-- OpenCode with plugin tuple options support
+- OpenCode `>=1.3.13`
 - Node.js `^20.19.0 || >=22.12.0`
 - Claude settings containing `env.ANTHROPIC_BASE_URL` and `env.ANTHROPIC_AUTH_TOKEN`
 
@@ -91,7 +91,7 @@ The plugin never writes credentials to OpenCode auth storage and does not log cr
 
 ## Migration From Inline Provider
 
-Validate the packed plugin before changing working global configuration. Run model discovery and a Haiku request from a temporary cwd with temporary `HOME`, XDG, and OpenCode config roots; install only the tarball through a local shim, use a private temporary Claude settings copy, and scan captured output for credential values. Only after all three expected models and `gateway-ok` pass should you remove the inline provider, plugin-owned `model` and `small_model` values, or any custom launcher. Keep rollback copies until direct `opencode` launch passes.
+Validate the packed plugin before changing working global configuration. Configure the package name directly in an isolated OpenCode `>=1.3.13` environment with temporary `HOME`, XDG, cwd, and config roots, plus a private temporary Claude settings copy. Run model discovery and a small test request, then scan captured output for credential values. Only after all expected models and the test response pass should you remove the inline provider, plugin-owned `model` and `small_model` values, or any custom launcher. Keep rollback copies until direct `opencode` launch passes.
 
 ## Development
 
@@ -100,4 +100,4 @@ npm ci
 npm run check
 ```
 
-`npm run check` runs tests, type checking, a clean build, then packed-artifact validation. Package creation also performs a clean build, while publishing runs the complete check first. Publishing remains an explicit maintainer action; neither build nor CI publishes packages.
+`npm run check` runs tests, type checking, a clean build, packed-artifact validation, then a deterministic smoke test using the pinned OpenCode 1.3.13 npm loader. The smoke test installs the local tarball into isolated cache/config roots and performs config/model discovery without inference or real credentials. Package creation also performs a clean build, while publishing runs the complete check first. Publishing remains an explicit maintainer action; neither build nor CI publishes packages.

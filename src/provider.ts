@@ -47,6 +47,7 @@ export function applyProvider(
         baseURL: normalizeBaseUrl(settings.baseUrl),
         setCacheKey: true,
       },
+      whitelist: Object.keys(models),
       models,
     },
   })

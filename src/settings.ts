@@ -65,7 +65,7 @@ export function normalizeBaseUrl(value: string): string {
     throw new Error("opencode-databricks-anthropic: ANTHROPIC_BASE_URL must not contain a query or hash")
   }
 
-  url.pathname = `${url.pathname.replace(/\/+$/, "").replace(/\/v1$/, "")}/v1`
+  url.pathname = `${url.pathname.replace(/\/+$/, "").replace(/(?:\/v1)+$/, "")}/v1`
   return url.toString()
 }
 

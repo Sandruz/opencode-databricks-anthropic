@@ -12,6 +12,7 @@ const DEFAULT_PROVIDER_ID = "databricks-anthropic"
 const DEFAULT_MODEL = "system.ai.claude-opus-5"
 const DEFAULT_SMALL_MODEL = "system.ai.claude-haiku-4-5"
 const ERROR_PREFIX = "opencode-databricks-anthropic:"
+const RESERVED_IDS = new Set(["__proto__", "constructor", "prototype"])
 
 export const DEFAULT_MODELS: Record<string, NormalizedModel> = {
   "system.ai.claude-opus-5": {
@@ -46,6 +47,12 @@ function nonempty(value: unknown, path: string): string {
     fail(`${path} must be a nonempty string`)
   }
   return value
+}
+
+function identifier(value: unknown, path: string): string {
+  const id = nonempty(value, path)
+  if (RESERVED_IDS.has(id)) fail(`${path} must not be reserved: ${id}`)
+  return id
 }
 
 function positiveInteger(value: unknown, fallback: number, path: string): number {
@@ -84,7 +91,7 @@ export function parseOptions(input: unknown): NormalizedOptions {
   const options = Object.fromEntries(Object.entries(input ?? {})) as PluginOptions
   const providerId = options.providerId === undefined
     ? DEFAULT_PROVIDER_ID
-    : nonempty(options.providerId, "providerId")
+    : identifier(options.providerId, "providerId")
   const defaultModel = options.defaultModel === undefined
     ? DEFAULT_MODEL
     : nonempty(options.defaultModel, "defaultModel")
@@ -100,7 +107,7 @@ export function parseOptions(input: unknown): NormalizedOptions {
     const entries = Object.entries(options.models)
     if (entries.length === 0) fail("models must be a nonempty object")
     models = Object.fromEntries(entries.map(([id, model]) => {
-      nonempty(id, "model ID")
+      identifier(id, "model ID")
       return [id, normalizeModel(id, model)]
     }))
   }

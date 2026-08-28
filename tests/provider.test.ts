@@ -49,6 +49,7 @@ describe("applyProvider", () => {
             baseURL: "https://workspace.example/gateway/v1",
             setCacheKey: true,
           },
+          whitelist: ["model-large", "model-small"],
           models: {
             "model-large": {
               name: "Large Model",
@@ -112,18 +113,14 @@ describe("applyProvider", () => {
     expect(inherited["custom-provider"]).toEqual({ name: "Inherited" })
   })
 
-  it.each(["__proto__", "constructor", "prototype"])(
-    "creates an own provider entry for special ID %s",
-    (providerId) => {
-      const config: Config = {}
+  it("safely creates an own entry if internal input bypasses parser validation", () => {
+    const config: Config = {}
 
-      applyProvider(config, { ...options, providerId }, settings)
+    applyProvider(config, { ...options, providerId: "__proto__" }, settings)
 
-      expect(Object.hasOwn(config.provider ?? {}, providerId)).toBe(true)
-      expect(Object.getPrototypeOf(config.provider)).toBe(Object.prototype)
-      expect(config.model).toBe(`${providerId}/model-large`)
-    },
-  )
+    expect(Object.hasOwn(config.provider ?? {}, "__proto__")).toBe(true)
+    expect(Object.getPrototypeOf(config.provider)).toBe(Object.prototype)
+  })
 
   it("does not mutate an inherited provider object", () => {
     const inheritedProvider = { existing: { name: "Inherited" } }
