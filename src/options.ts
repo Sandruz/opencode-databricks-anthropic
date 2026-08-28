@@ -102,8 +102,8 @@ export function parseOptions(input: unknown): NormalizedOptions {
     models = Object.fromEntries(entries.map(([id, model]) => [id, normalizeModel(id, model)]))
   }
 
-  if (!(defaultModel in models)) fail("defaultModel must reference a configured model")
-  if (!(smallModel in models)) fail("smallModel must reference a configured model")
+  if (!Object.hasOwn(models, defaultModel)) fail("defaultModel must reference a configured model")
+  if (!Object.hasOwn(models, smallModel)) fail("smallModel must reference a configured model")
 
   return {
     ...(options.settingsPath === undefined

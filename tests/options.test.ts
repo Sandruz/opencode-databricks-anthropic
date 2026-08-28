@@ -49,6 +49,22 @@ describe("parseOptions", () => {
     })
   })
 
+  it("rejects an inherited default model reference", () => {
+    expect(() => parseOptions({
+      models: { x: {} },
+      defaultModel: "toString",
+      smallModel: "x",
+    })).toThrow("defaultModel must reference a configured model")
+  })
+
+  it("rejects an inherited small model reference", () => {
+    expect(() => parseOptions({
+      models: { x: {} },
+      defaultModel: "x",
+      smallModel: "toString",
+    })).toThrow("smallModel must reference a configured model")
+  })
+
   it.each([
     [{ models: {} }, "models must be a nonempty object"],
     [{ models: [] }, "models must be a nonempty object"],
