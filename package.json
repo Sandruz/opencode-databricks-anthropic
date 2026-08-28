@@ -40,7 +40,7 @@
   },
   "homepage": "https://github.com/Sandruz/opencode-databricks-anthropic#readme",
   "dependencies": {
-    "@opencode-ai/plugin": "^1.18.25"
+    "@opencode-ai/plugin": "1.14.19"
   },
   "devDependencies": {
     "@types/node": "^22.18.0",
