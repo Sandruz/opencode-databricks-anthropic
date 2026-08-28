@@ -1,0 +1,49 @@
+{
+  "name": "opencode-databricks-anthropic",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "pack:check": "npm pack --dry-run && node scripts/validate-package.mjs",
+    "check": "npm run test && npm run typecheck && npm run build && npm run pack:check"
+  },
+  "keywords": [
+    "opencode",
+    "databricks",
+    "anthropic",
+    "ai-gateway"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sandruz/opencode-databricks-anthropic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Sandruz/opencode-databricks-anthropic/issues"
+  },
+  "homepage": "https://github.com/Sandruz/opencode-databricks-anthropic#readme",
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.18.25"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
+  }
+}
