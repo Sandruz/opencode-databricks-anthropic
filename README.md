@@ -100,4 +100,4 @@ npm ci
 npm run check
 ```
 
-`npm run check` runs tests, type checking, build, then packed-artifact validation. Publishing is an explicit maintainer action; neither build nor CI publishes packages.
+`npm run check` runs tests, type checking, a clean build, then packed-artifact validation. Package creation also performs a clean build, while publishing runs the complete check first. Publishing remains an explicit maintainer action; neither build nor CI publishes packages.
