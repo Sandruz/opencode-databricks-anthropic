@@ -3,6 +3,7 @@ import { mkdtemp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promis
 import { tmpdir } from "node:os"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { validateLoaderResult } from "./smoke-loader-validation.mjs"
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const secret = "synthetic-private-loader-token"
@@ -88,21 +89,7 @@ try {
       OPENCODE_TEST_MANAGED_CONFIG_DIR: join(temporary, "managed"),
     },
   })
-  const output = `${result.stdout}${result.stderr}`
-  if (result.code !== 0) throw new Error(`OpenCode loader smoke failed\n${output}`)
-  if (result.stderr.includes(secret)) throw new Error("OpenCode loader smoke leaked synthetic credentials to stderr")
-  const resolvedConfig = JSON.parse(result.stdout)
-  const provider = resolvedConfig.provider?.["private-anthropic"]
-  const models = Object.keys(provider?.models ?? {}).sort()
-  const expected = ["private-large", "private-small"]
-  if (
-    resolvedConfig.model !== "private-anthropic/private-large"
-    || resolvedConfig.small_model !== "private-anthropic/private-small"
-    || JSON.stringify(models) !== JSON.stringify(expected)
-    || JSON.stringify(provider?.whitelist) !== JSON.stringify(expected)
-  ) {
-    throw new Error(`OpenCode loader resolved unexpected config: ${JSON.stringify(resolvedConfig)}`)
-  }
+  validateLoaderResult(result, secret)
   console.log("OpenCode 1.3.13 packed npm-spec loader smoke passed: 2 private models")
 } finally {
   await rm(temporary, { recursive: true, force: true })

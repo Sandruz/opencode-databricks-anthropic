@@ -12,7 +12,7 @@ const DEFAULT_PROVIDER_ID = "databricks-anthropic"
 const DEFAULT_MODEL = "system.ai.claude-opus-5"
 const DEFAULT_SMALL_MODEL = "system.ai.claude-haiku-4-5"
 const ERROR_PREFIX = "opencode-databricks-anthropic:"
-const RESERVED_IDS = new Set(["__proto__", "constructor", "prototype"])
+const RESERVED_IDS = new Set([...Object.getOwnPropertyNames(Object.prototype), "prototype"])
 
 export const DEFAULT_MODELS: Record<string, NormalizedModel> = {
   "system.ai.claude-opus-5": {

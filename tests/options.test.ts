@@ -107,7 +107,7 @@ describe("parseOptions", () => {
     })).toThrow("smallModel must reference a configured model")
   })
 
-  it.each(["__proto__", "constructor", "prototype"])(
+  it.each([...Object.getOwnPropertyNames(Object.prototype), "prototype"])(
     "rejects reserved provider ID %s",
     (providerId) => {
       expect(() => parseOptions({ providerId })).toThrow(
@@ -116,7 +116,7 @@ describe("parseOptions", () => {
     },
   )
 
-  it.each(["__proto__", "constructor", "prototype"])(
+  it.each([...Object.getOwnPropertyNames(Object.prototype), "prototype"])(
     "rejects reserved model ID %s",
     (modelId) => {
       expect(() => parseOptions({
@@ -126,6 +126,18 @@ describe("parseOptions", () => {
       })).toThrow(`model ID must not be reserved: ${modelId}`)
     },
   )
+
+  it("accepts IDs unrelated to Object.prototype properties", () => {
+    const parsed = parseOptions({
+      providerId: "toString-models",
+      models: { "valueOf-v2": {} },
+      defaultModel: "valueOf-v2",
+      smallModel: "valueOf-v2",
+    })
+
+    expect(parsed.providerId).toBe("toString-models")
+    expect(Object.keys(parsed.models)).toEqual(["valueOf-v2"])
+  })
 
   it.each([
     [{ models: {} }, "models must be a nonempty object"],
