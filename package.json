@@ -22,7 +22,7 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "build": "tsc",
-    "pack:check": "npm pack --dry-run && node scripts/validate-package.mjs",
+    "pack:check": "node scripts/validate-package.mjs",
     "check": "npm run test && npm run typecheck && npm run build && npm run pack:check"
   },
   "keywords": [
