@@ -8,15 +8,19 @@ export function applyProvider(
   options: NormalizedOptions,
   settings: GatewaySettings,
 ): void {
-  const configuredProviders = Object.hasOwn(config, "provider") && config.provider
-    ? Object.fromEntries(Object.entries(config.provider))
-    : {}
-
-  if (Object.hasOwn(configuredProviders, options.providerId)) {
+  if (
+    Object.hasOwn(config, "provider")
+    && config.provider
+    && Object.hasOwn(config.provider, options.providerId)
+  ) {
     throw new Error(
       `opencode-databricks-anthropic: provider ${options.providerId} is already configured`,
     )
   }
+
+  const configuredProviders = Object.hasOwn(config, "provider") && config.provider
+    ? Object.fromEntries(Object.entries(config.provider))
+    : {}
 
   const models = Object.fromEntries(Object.entries(options.models).map(([id, model]) => [
     id,

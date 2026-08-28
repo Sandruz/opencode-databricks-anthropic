@@ -90,6 +90,18 @@ describe("applyProvider", () => {
     expect(() => applyProvider(config, options, settings)).not.toThrow("synthetic-secret")
   })
 
+  it("rejects a non-enumerable own provider ID", () => {
+    const provider = {}
+    Object.defineProperty(provider, "custom-provider", {
+      value: { name: "Hidden Existing" },
+    })
+    const config: Config = { provider }
+
+    expect(() => applyProvider(config, options, settings)).toThrow(
+      "opencode-databricks-anthropic: provider custom-provider is already configured",
+    )
+  })
+
   it("ignores an inherited provider ID and creates an own entry", () => {
     const inherited = { "custom-provider": { name: "Inherited" } }
     const config: Config = { provider: Object.create(inherited) }
