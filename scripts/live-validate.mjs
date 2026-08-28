@@ -43,5 +43,10 @@ export async function preflightClaudeSettings(path, log = console.log) {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  await preflightClaudeSettings(resolveClaudeSettingsPath())
+  try {
+    await preflightClaudeSettings(resolveClaudeSettingsPath())
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : "Claude settings preflight failed")
+    process.exitCode = 1
+  }
 }

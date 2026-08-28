@@ -1,11 +1,14 @@
+import { spawnSync } from "node:child_process"
 import { mkdtemp, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
-import { join, resolve } from "node:path"
+import { dirname, join, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 import { afterEach, describe, expect, it } from "vitest"
 
 import { preflightClaudeSettings, resolveClaudeSettingsPath } from "../scripts/live-validate.mjs"
 
 const temporaryDirectories: string[] = []
+const scriptPath = resolve(dirname(fileURLToPath(import.meta.url)), "../scripts/live-validate.mjs")
 
 async function writeSettings(contents: unknown): Promise<string> {
   const directory = await mkdtemp(join(tmpdir(), "live-validate-"))
@@ -78,4 +81,35 @@ describe("preflightClaudeSettings", () => {
       await expect(preflightClaudeSettings(path)).rejects.toThrow(`env object is missing in ${path}`)
     },
   )
+})
+
+describe("live-validate CLI", () => {
+  it("exits nonzero with sanitized stderr for missing settings", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "live-validate-cli-"))
+    temporaryDirectories.push(directory)
+
+    const result = spawnSync(process.execPath, [scriptPath], {
+      encoding: "utf8",
+      env: { ...process.env, CLAUDE_CONFIG_DIR: directory },
+    })
+
+    expect(result.status).toBe(1)
+    expect(result.stdout).toBe("")
+    expect(result.stderr).toBe(`Claude settings ${join(directory, "settings.json")} cannot be read\n`)
+  })
+
+  it("exits nonzero without leaking malformed settings content", async () => {
+    const secret = "synthetic-secret-cli-value"
+    const path = await writeSettings(`{"env":{"ANTHROPIC_AUTH_TOKEN":"${secret}"`)
+
+    const result = spawnSync(process.execPath, [scriptPath], {
+      encoding: "utf8",
+      env: { ...process.env, CLAUDE_CONFIG_DIR: dirname(path) },
+    })
+
+    expect(result.status).toBe(1)
+    expect(result.stdout).toBe("")
+    expect(result.stderr).toBe(`Claude settings ${path} contains invalid JSON\n`)
+    expect(`${result.stdout}${result.stderr}`).not.toContain(secret)
+  })
 })
