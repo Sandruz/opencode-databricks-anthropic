@@ -58,6 +58,12 @@ export function normalizeBaseUrl(value: string): string {
   if (url.protocol !== "https:" && url.protocol !== "http:") {
     throw new Error("opencode-databricks-anthropic: ANTHROPIC_BASE_URL must use HTTP or HTTPS")
   }
+  if (url.username || url.password) {
+    throw new Error("opencode-databricks-anthropic: ANTHROPIC_BASE_URL must not contain credentials")
+  }
+  if (url.search || url.hash || value.includes("?") || value.includes("#")) {
+    throw new Error("opencode-databricks-anthropic: ANTHROPIC_BASE_URL must not contain a query or hash")
+  }
 
   url.pathname = `${url.pathname.replace(/\/+$/, "").replace(/\/v1$/, "")}/v1`
   return url.toString()

@@ -1,6 +1,6 @@
 import { mkdtemp, rm, writeFile } from "node:fs/promises"
 import { homedir, tmpdir } from "node:os"
-import { join } from "node:path"
+import { join, resolve } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
 
 import {
@@ -38,13 +38,15 @@ describe("resolveSettingsPath", () => {
   })
 
   it("uses CLAUDE_CONFIG_DIR before the default", () => {
-    process.env.CLAUDE_CONFIG_DIR = "/claude-config"
-    expect(resolveSettingsPath(undefined, "/work")).toBe("/claude-config/settings.json")
+    const configDirectory = resolve("claude-config-root")
+    process.env.CLAUDE_CONFIG_DIR = configDirectory
+    expect(resolveSettingsPath(undefined, resolve("work"))).toBe(join(configDirectory, "settings.json"))
   })
 
   it("resolves a relative CLAUDE_CONFIG_DIR from startup cwd", () => {
+    const cwd = resolve("work")
     process.env.CLAUDE_CONFIG_DIR = "claude-config"
-    expect(resolveSettingsPath(undefined, "/work")).toBe("/work/claude-config/settings.json")
+    expect(resolveSettingsPath(undefined, cwd)).toBe(resolve(cwd, "claude-config/settings.json"))
   })
 
   it("uses the default home settings path", () => {
@@ -53,7 +55,8 @@ describe("resolveSettingsPath", () => {
   })
 
   it("resolves relative explicit paths from startup cwd", () => {
-    expect(resolveSettingsPath("config/claude.json", "/work")).toBe("/work/config/claude.json")
+    const cwd = resolve("work")
+    expect(resolveSettingsPath("config/claude.json", cwd)).toBe(resolve(cwd, "config/claude.json"))
   })
 })
 
@@ -157,14 +160,46 @@ describe("normalizeBaseUrl", () => {
     expect(normalizeBaseUrl("https://example.com/gateway/v11")).toBe("https://example.com/gateway/v11/v1")
   })
 
-  it("preserves query and hash components", () => {
-    expect(normalizeBaseUrl("https://example.com/gateway/?route=one#anchor")).toBe(
-      "https://example.com/gateway/v1?route=one#anchor",
+  it("rejects a query component", () => {
+    expect(() => normalizeBaseUrl("https://example.com/gateway?route=one")).toThrow(
+      "ANTHROPIC_BASE_URL must not contain a query or hash",
     )
   })
 
-  it("does not trim a trailing slash from the hash", () => {
-    expect(normalizeBaseUrl("https://example.com/gateway#route/")).toBe("https://example.com/gateway/v1#route/")
+  it("rejects a hash component", () => {
+    expect(() => normalizeBaseUrl("https://example.com/gateway#anchor")).toThrow(
+      "ANTHROPIC_BASE_URL must not contain a query or hash",
+    )
+  })
+
+  it.each([
+    "https://example.com/gateway?",
+    "https://example.com/gateway#",
+  ])("rejects an empty query or hash component in %s", (input) => {
+    expect(() => normalizeBaseUrl(input)).toThrow("ANTHROPIC_BASE_URL must not contain a query or hash")
+  })
+
+  it("rejects a username without exposing it", () => {
+    let message = ""
+    try {
+      normalizeBaseUrl("https://sensitive-user@example.com/gateway")
+    } catch (error) {
+      message = (error as Error).message
+    }
+    expect(message).toContain("ANTHROPIC_BASE_URL must not contain credentials")
+    expect(message).not.toContain("sensitive-user")
+  })
+
+  it("rejects a password without exposing it", () => {
+    let message = ""
+    try {
+      normalizeBaseUrl("https://user:sensitive-password@example.com/gateway")
+    } catch (error) {
+      message = (error as Error).message
+    }
+    expect(message).toContain("ANTHROPIC_BASE_URL must not contain credentials")
+    expect(message).not.toContain("user")
+    expect(message).not.toContain("sensitive-password")
   })
 
   it("rejects malformed URLs", () => {
