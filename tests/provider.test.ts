@@ -103,6 +103,70 @@ describe("applyProvider", () => {
     )
   })
 
+  it("re-applies idempotently when the config hook runs twice against the same shared config object", () => {
+    // Regression test: opencode's host process can cache/reuse the same
+    // Config object across multiple session/run invocations of the plugin's
+    // config hook within one long-lived server process. Since applyProvider
+    // mutates config in place, a naive "already configured" guard would
+    // mistake its own earlier mutation for a genuine third-party conflict on
+    // the second invocation, permanently breaking the provider. Verify the
+    // second call on the same object succeeds and still yields a correct,
+    // freshly-built provider entry rather than throwing.
+    const config: Config = {}
+
+    applyProvider(config, options, settings)
+    expect(() => applyProvider(config, options, settings)).not.toThrow()
+
+    expect(config).toEqual({
+      provider: {
+        "custom-provider": {
+          npm: "@ai-sdk/anthropic",
+          name: "Databricks Anthropic",
+          options: {
+            authToken: "synthetic-secret",
+            baseURL: "https://workspace.example/gateway/v1",
+            setCacheKey: true,
+          },
+          whitelist: ["model-large", "model-small"],
+          models: {
+            "model-large": {
+              name: "Large Model",
+              reasoning: true,
+              tool_call: true,
+              limit: { context: 200000, output: 64000 },
+              headers: { "x-databricks-use-coding-agent-mode": "enabled" },
+            },
+            "model-small": {
+              name: "Small Model",
+              reasoning: false,
+              tool_call: false,
+              limit: { context: 100000, output: 8192 },
+              headers: { "x-databricks-use-coding-agent-mode": "enabled" },
+            },
+          },
+        },
+      },
+      model: "custom-provider/model-large",
+      small_model: "custom-provider/model-small",
+    })
+  })
+
+  it("still rejects a same-named own-looking entry from a genuinely different plugin", () => {
+    // A third-party entry that happens to share the npm package and display
+    // name is treated as "own" by design (best-effort self-detection); this
+    // test documents that boundary rather than asserting a false conflict.
+    // A different npm package or name must still be rejected as a conflict.
+    const config: Config = {
+      provider: {
+        "custom-provider": { npm: "@ai-sdk/anthropic", name: "Some Other Plugin" },
+      },
+    }
+
+    expect(() => applyProvider(config, options, settings)).toThrow(
+      "opencode-databricks-anthropic: provider custom-provider is already configured",
+    )
+  })
+
   it("ignores an inherited provider ID and creates an own entry", () => {
     const inherited = { "custom-provider": { name: "Inherited" } }
     const config: Config = { provider: Object.create(inherited) }

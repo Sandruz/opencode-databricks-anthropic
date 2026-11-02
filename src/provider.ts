@@ -3,6 +3,30 @@ import type { Config } from "@opencode-ai/plugin"
 import { normalizeBaseUrl, type GatewaySettings } from "./settings.js"
 import type { NormalizedOptions } from "./types.js"
 
+const OWN_PROVIDER_NPM = "@ai-sdk/anthropic"
+const OWN_PROVIDER_NAME = "Databricks Anthropic"
+
+/**
+ * Detects whether an existing `config.provider[providerId]` entry was
+ * created by this same plugin on a prior invocation, rather than by a
+ * different plugin/user config genuinely claiming the same providerId.
+ *
+ * Why this matters: opencode's host process may reuse/cache the same
+ * `Config` object across multiple session/run invocations of the plugin's
+ * `config` hook within one long-lived server process. Since `applyProvider`
+ * mutates `config` in place, a second invocation against that same shared
+ * object would otherwise see its own earlier mutation and mistake it for a
+ * real conflict, permanently breaking the provider for every subsequent
+ * session until the server process is fully restarted. Recognizing "this is
+ * just me again" lets the hook safely re-apply (idempotent) instead of
+ * throwing, while still throwing on a genuine third-party conflict.
+ */
+function isOwnProviderEntry(entry: unknown): boolean {
+  if (typeof entry !== "object" || entry === null) return false
+  const candidate = entry as { npm?: unknown; name?: unknown }
+  return candidate.npm === OWN_PROVIDER_NPM && candidate.name === OWN_PROVIDER_NAME
+}
+
 export function applyProvider(
   config: Config,
   options: NormalizedOptions,
@@ -12,6 +36,7 @@ export function applyProvider(
     Object.hasOwn(config, "provider")
     && config.provider
     && Object.hasOwn(config.provider, options.providerId)
+    && !isOwnProviderEntry(config.provider[options.providerId])
   ) {
     throw new Error(
       `opencode-databricks-anthropic: provider ${options.providerId} is already configured`,
