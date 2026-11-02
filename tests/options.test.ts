@@ -69,6 +69,33 @@ describe("parseOptions", () => {
     })
   })
 
+  it("passes through a compatibility override unchanged", () => {
+    const options = parseOptions({
+      defaultModel: "custom-claude",
+      smallModel: "custom-claude",
+      models: {
+        "custom-claude": {
+          compatibility: { supportsThinkingBlockBinding: false, supportsEffortUpdates: false },
+        },
+      },
+    })
+
+    expect(options.models["custom-claude"].compatibility).toEqual({
+      supportsThinkingBlockBinding: false,
+      supportsEffortUpdates: false,
+    })
+  })
+
+  it("omits compatibility when not provided", () => {
+    const options = parseOptions({
+      defaultModel: "custom-claude",
+      smallModel: "custom-claude",
+      models: { "custom-claude": {} },
+    })
+
+    expect(options.models["custom-claude"]).not.toHaveProperty("compatibility")
+  })
+
   it("ignores inherited model properties", () => {
     const model = Object.create({
       name: "Inherited",
@@ -166,6 +193,14 @@ describe("parseOptions", () => {
     [
       { models: { x: { toolCall: "yes" } }, defaultModel: "x", smallModel: "x" },
       "models.x.toolCall must be a boolean",
+    ],
+    [
+      { models: { x: { compatibility: "yes" } }, defaultModel: "x", smallModel: "x" },
+      "models.x.compatibility must be an object",
+    ],
+    [
+      { models: { x: { compatibility: [] } }, defaultModel: "x", smallModel: "x" },
+      "models.x.compatibility must be an object",
     ],
     [
       { models: { x: {} }, defaultModel: "missing", smallModel: "x" },

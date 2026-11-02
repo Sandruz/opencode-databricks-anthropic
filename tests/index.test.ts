@@ -62,7 +62,10 @@ describe("DatabricksAnthropicPlugin", () => {
       defaultModel: "large",
       smallModel: "small",
       models: {
-        large: { name: "Large" },
+        large: {
+          name: "Large",
+          compatibility: { supportsThinkingBlockBinding: false, supportsEffortUpdates: false },
+        },
         small: { name: "Small" },
       },
     })
@@ -73,6 +76,11 @@ describe("DatabricksAnthropicPlugin", () => {
     expect(config.model).toBe("gateway/large")
     expect(config.small_model).toBe("gateway/small")
     expect(Object.keys(config.provider?.gateway.models ?? {})).toEqual(["large", "small"])
+    expect(config.provider?.gateway.models.large.compatibility).toEqual({
+      supportsThinkingBlockBinding: false,
+      supportsEffortUpdates: false,
+    })
+    expect(config.provider?.gateway.models.small).not.toHaveProperty("compatibility")
   })
 
   it("rejects invalid options during initialization before reading settings", async () => {

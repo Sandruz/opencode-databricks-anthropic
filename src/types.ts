@@ -4,6 +4,7 @@ export interface ModelOptions {
   output?: number
   reasoning?: boolean
   toolCall?: boolean
+  compatibility?: Record<string, unknown>
 }
 
 export interface PluginOptions {
@@ -20,6 +21,7 @@ export interface NormalizedModel {
   output: number
   reasoning: boolean
   toolCall: boolean
+  compatibility?: Record<string, unknown>
 }
 
 export interface NormalizedOptions {

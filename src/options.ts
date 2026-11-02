@@ -69,18 +69,28 @@ function boolean(value: unknown, fallback: boolean, path: string): boolean {
   return value
 }
 
+function compatibility(value: unknown, path: string): Record<string, unknown> | undefined {
+  if (value === undefined) return undefined
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    fail(`${path} must be an object`)
+  }
+  return Object.fromEntries(Object.entries(value))
+}
+
 function normalizeModel(id: string, value: unknown): NormalizedModel {
   const path = `models.${id}`
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     fail(`${path} must be an object`)
   }
   const model = Object.fromEntries(Object.entries(value)) as ModelOptions
+  const modelCompatibility = compatibility(model.compatibility, `${path}.compatibility`)
   return {
     name: model.name === undefined ? id : nonempty(model.name, `${path}.name`),
     context: positiveInteger(model.context, DEFAULT_CONTEXT, `${path}.context`),
     output: positiveInteger(model.output, DEFAULT_OUTPUT, `${path}.output`),
     reasoning: boolean(model.reasoning, true, `${path}.reasoning`),
     toolCall: boolean(model.toolCall, true, `${path}.toolCall`),
+    ...(modelCompatibility === undefined ? {} : { compatibility: modelCompatibility }),
   }
 }
 

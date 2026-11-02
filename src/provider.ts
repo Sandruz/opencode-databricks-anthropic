@@ -29,6 +29,7 @@ export function applyProvider(
       reasoning: model.reasoning,
       tool_call: model.toolCall,
       limit: { context: model.context, output: model.output },
+      ...(model.compatibility === undefined ? {} : { compatibility: model.compatibility }),
       ...(settings.codingAgentMode === undefined
         ? {}
         : { headers: { "x-databricks-use-coding-agent-mode": settings.codingAgentMode } }),

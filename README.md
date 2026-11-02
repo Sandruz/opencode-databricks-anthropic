@@ -55,6 +55,7 @@ Each model field is optional:
 - `output`: positive integer output-token limit; defaults to `64000`
 - `reasoning`: whether OpenCode exposes reasoning support; defaults to `true`
 - `toolCall`: whether OpenCode exposes tool-call support; defaults to `true`
+- `compatibility`: optional object passed through verbatim to OpenCode's per-model `compatibility` field (see OpenCode's [config schema](https://opencode.ai/config.json), `Model.Compatibility`); omitted by default. Useful for disabling gateway-unsupported request features, e.g. `{ "supportsThinkingBlockBinding": false, "supportsEffortUpdates": false }` if the Databricks endpoint rejects extended-thinking `block_binding` requests (`thinking.adaptive.block_binding: Extra inputs are not permitted`). Do not set this via a top-level `provider` block in `opencode.json`: OpenCode merges that key by replacing this plugin's whole provider entry, which drops `baseURL`/`authToken` and breaks requests. Always set `compatibility` through this plugin's own `models` option instead.
 
 ## Claude Settings
 
