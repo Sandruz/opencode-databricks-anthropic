@@ -7,15 +7,15 @@ describe("parseOptions", () => {
     const options = parseOptions(undefined)
 
     expect(options.providerId).toBe("databricks-anthropic")
-    expect(options.defaultModel).toBe("system.ai.claude-opus-5")
+    expect(options.defaultModel).toBe("system.ai.claude-opus-5-5")
     expect(options.smallModel).toBe("system.ai.claude-haiku-4-5")
     expect(Object.keys(options.models)).toEqual([
-      "system.ai.claude-opus-5",
-      "system.ai.claude-sonnet-5",
+      "system.ai.claude-opus-5-5",
+      "system.ai.claude-sonnet-5-5",
       "system.ai.claude-haiku-4-5",
     ])
-    expect(options.models["system.ai.claude-opus-5"]).toEqual({
-      name: "Claude Opus 5 (Databricks)",
+    expect(options.models["system.ai.claude-opus-5-5"]).toEqual({
+      name: "Claude Opus 5.5 (Databricks)",
       context: 200000,
       output: 64000,
       reasoning: true,
@@ -25,10 +25,10 @@ describe("parseOptions", () => {
 
   it("returns isolated default models", () => {
     const first = parseOptions(undefined)
-    first.models["system.ai.claude-opus-5"].name = "Mutated"
+    first.models["system.ai.claude-opus-5-5"].name = "Mutated"
 
     const second = parseOptions(undefined)
-    expect(second.models["system.ai.claude-opus-5"].name).toBe("Claude Opus 5 (Databricks)")
+    expect(second.models["system.ai.claude-opus-5-5"].name).toBe("Claude Opus 5.5 (Databricks)")
   })
 
   it("ignores inherited top-level options", () => {

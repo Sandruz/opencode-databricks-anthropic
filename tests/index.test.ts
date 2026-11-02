@@ -35,7 +35,7 @@ describe("DatabricksAnthropicPlugin", () => {
 
     await hooks.config?.(config)
 
-    expect(config.model).toBe("databricks-anthropic/system.ai.claude-opus-5")
+    expect(config.model).toBe("databricks-anthropic/system.ai.claude-opus-5-5")
     expect(config.small_model).toBe("databricks-anthropic/system.ai.claude-haiku-4-5")
     expect(Object.keys(config.provider?.["databricks-anthropic"].models ?? {})).toHaveLength(3)
     expect(config.provider?.["databricks-anthropic"].options).toMatchObject({

@@ -9,21 +9,21 @@ export const DEFAULT_CONTEXT = 200000
 export const DEFAULT_OUTPUT = 64000
 
 const DEFAULT_PROVIDER_ID = "databricks-anthropic"
-const DEFAULT_MODEL = "system.ai.claude-opus-5"
+const DEFAULT_MODEL = "system.ai.claude-opus-5-5"
 const DEFAULT_SMALL_MODEL = "system.ai.claude-haiku-4-5"
 const ERROR_PREFIX = "opencode-databricks-anthropic:"
 const RESERVED_IDS = new Set([...Object.getOwnPropertyNames(Object.prototype), "prototype"])
 
 export const DEFAULT_MODELS: Record<string, NormalizedModel> = {
-  "system.ai.claude-opus-5": {
-    name: "Claude Opus 5 (Databricks)",
+  "system.ai.claude-opus-5-5": {
+    name: "Claude Opus 5.5 (Databricks)",
     context: DEFAULT_CONTEXT,
     output: DEFAULT_OUTPUT,
     reasoning: true,
     toolCall: true,
   },
-  "system.ai.claude-sonnet-5": {
-    name: "Claude Sonnet 5 (Databricks)",
+  "system.ai.claude-sonnet-5-5": {
+    name: "Claude Sonnet 5.5 (Databricks)",
     context: DEFAULT_CONTEXT,
     output: DEFAULT_OUTPUT,
     reasoning: true,

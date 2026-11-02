@@ -30,7 +30,7 @@ OpenCode tuple configuration passes plugin options as the second tuple item:
       {
         "settingsPath": "~/.claude/settings.json",
         "providerId": "databricks-anthropic",
-        "defaultModel": "system.ai.claude-opus-5",
+        "defaultModel": "system.ai.claude-opus-5-5",
         "smallModel": "system.ai.claude-haiku-4-5"
       }
     ]
@@ -42,9 +42,9 @@ Defaults:
 
 - `settingsPath`: `$CLAUDE_CONFIG_DIR/settings.json`, otherwise `~/.claude/settings.json`
 - `providerId`: `databricks-anthropic`
-- `defaultModel`: `system.ai.claude-opus-5`
+- `defaultModel`: `system.ai.claude-opus-5-5`
 - `smallModel`: `system.ai.claude-haiku-4-5`
-- `models`: Opus 5, Sonnet 5, and Haiku 4.5 Databricks endpoints; each defaults to 200,000 context tokens, 64,000 output tokens, reasoning enabled, and tool calls enabled
+- `models`: Opus 5.5, Sonnet 5.5, and Haiku 4.5 Databricks endpoints; each defaults to 200,000 context tokens, 64,000 output tokens, reasoning enabled, and tool calls enabled
 
 Supplying `models` replaces the complete default map; it does not merge with defaults. Both `defaultModel` and `smallModel` must reference entries in that replacement map.
 
