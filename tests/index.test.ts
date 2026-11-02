@@ -83,6 +83,33 @@ describe("DatabricksAnthropicPlugin", () => {
     expect(config.provider?.gateway.models.small).not.toHaveProperty("compatibility")
   })
 
+  it("strips the unsupported thinking.blockBinding field injected by opencode core", async () => {
+    const fixture = await settingsFile()
+    const hooks = await DatabricksAnthropicPlugin(pluginInput("/workspace"), {
+      settingsPath: fixture.path,
+    })
+    const output = {
+      temperature: 0,
+      topP: 1,
+      topK: 0,
+      maxOutputTokens: undefined,
+      options: { thinking: { type: "adaptive", blockBinding: { prefixMismatchBehavior: "drop_block" } } },
+    }
+
+    await hooks["chat.params"]?.(
+      {
+        sessionID: "session",
+        agent: "build",
+        model: { providerID: "databricks-anthropic" } as any,
+        provider: {} as any,
+        message: {} as any,
+      },
+      output,
+    )
+
+    expect(output.options.thinking).toEqual({ type: "adaptive" })
+  })
+
   it("rejects invalid options during initialization before reading settings", async () => {
     await expect(DatabricksAnthropicPlugin(pluginInput("/missing"), {
       settingsPath: "does-not-exist.json",

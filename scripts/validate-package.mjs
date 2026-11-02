@@ -5,6 +5,8 @@ import { resolve } from "node:path"
 export const EXPECTED_FILES = [
   "LICENSE",
   "README.md",
+  "dist/chat-params.d.ts",
+  "dist/chat-params.js",
   "dist/index.d.ts",
   "dist/index.js",
   "dist/options.d.ts",

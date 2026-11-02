@@ -1,4 +1,5 @@
 import type { Plugin } from "@opencode-ai/plugin"
+import { stripUnsupportedBlockBinding } from "./chat-params.js"
 import { parseOptions } from "./options.js"
 import { applyProvider } from "./provider.js"
 import { loadClaudeSettings, resolveSettingsPath } from "./settings.js"
@@ -11,6 +12,9 @@ export const DatabricksAnthropicPlugin: Plugin = async ({ directory }, rawOption
     config: async (config) => {
       const settings = await loadClaudeSettings(settingsPath)
       applyProvider(config, options, settings)
+    },
+    "chat.params": async (input, output) => {
+      stripUnsupportedBlockBinding(options, input, output)
     },
   }
 }
